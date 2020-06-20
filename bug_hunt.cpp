@@ -11,21 +11,24 @@ class BugHunt : public olc::PixelGameEngine
 	olc::vi2d player_size = { 32 ,32 };
 	float player_speed = 40.0f;
 
-	int player_direction = 0;
+	int player_direction = 7;
 
 	const int player_anim_frame_idle_start = 0;
 	const int player_anim_frame_move_start = 3;
 	const int player_anim_frame_fire_start = 7;
 	const int player_anim_frame_fire_end = 9;
+
 	float player_anim_frame_counter = 0.0f;
 	int player_anim_frame = 0;
 
 	bool player_moving = false;
-	float player_moving_anim_speed = 0.2f;
+	float player_moving_anim_speed = 0.15f;
 
 	bool player_firing = true;
-	float player_firing_anim_speed = 0.1f;
+	float player_firing_anim_speed = 0.08f;
 
+	olc::Sprite* player_sprite= nullptr;
+	olc::Decal* player_decal = nullptr;
 
 public:
 	BugHunt()
@@ -37,6 +40,9 @@ public:
 public:
 	bool OnUserCreate() override
 	{
+		player_sprite = new olc::Sprite("resources/gent.png");
+		player_decal = new olc::Decal(player_sprite);
+
 		return true;
 	}
 
@@ -48,18 +54,22 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 
-		FillRect(screen_origin, screen_size, olc::BLUE);
+		Clear(olc::DARK_GREY);
 		HandleUserInput(fElapsedTime);
-		DrawRect(player_pos, player_size, olc::RED);
-		DrawString(player_pos, std::to_string(player_direction) + "  " + std::to_string(player_anim_frame));
+		//DrawRect(player_pos, player_size, olc::RED);
+		//DrawString(player_pos, std::to_string(player_direction) + "  " + std::to_string(player_anim_frame));
 
+		float y_pos_sprite_sheet = player_direction * 32.0f;
+		float x_pos_sprite_sheet = player_anim_frame * 32.0f;
+
+		DrawPartialDecal(player_pos, { 32.0f,32.0f }, player_decal, { x_pos_sprite_sheet,y_pos_sprite_sheet }, { 32.0f,32.0f });
 		return true;
 	}
 
-	enum olc::Key key_up = olc::Q;
-	enum olc::Key key_down = olc::A;
-	enum olc::Key key_left = olc::O;
-	enum olc::Key key_right = olc::P;
+	enum olc::Key key_up = olc::UP;
+	enum olc::Key key_down = olc::DOWN;
+	enum olc::Key key_left = olc::LEFT;
+	enum olc::Key key_right = olc::RIGHT;
 
 	void HandleUserInput(float elapsedTime) {
 
@@ -72,7 +82,8 @@ public:
 		player_firing = (GetKey(olc::SPACE).bHeld);
 
 		player_moving = (y_direction != 0 || x_direction != 0);
-		player_direction = 1 + x_direction + (y_direction + 1) * 3;
+		int new_player_direction = 1 + x_direction + (y_direction + 1) * 3;
+		if (new_player_direction != 4) player_direction = new_player_direction;
 
 		if(player_moving && !player_firing) {
 			// player is moving
@@ -113,6 +124,7 @@ public:
 
 		}
 		else {
+			player_anim_frame = player_anim_frame_idle_start;
 		}
 	}
 };

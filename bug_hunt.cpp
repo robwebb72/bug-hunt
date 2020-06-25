@@ -3,17 +3,20 @@
 #include "Zix_PGE_Controller.h"
 #include "map.cpp"
 #include "anim_sprite.cpp"
+
+
 //#define SHOW_DEBUG_INFO
+
 
 olc::vi2d screen_origin = { 0, 0 };
 olc::vi2d screen_size = { 640, 400 };
 
 
-float bindToRange(float value, float min, float max) {
+float BindToRange(float value, float min, float max) {
 	return value < min ? min : (value > max ? max : value);
 }
 
-int bindToRange(int value, int min, int max) {
+int BindToRange(int value, int min, int max) {
 	return value < min ? min : (value > max ? max : value);
 };
 
@@ -34,13 +37,13 @@ class BugHunt : public olc::PixelGameEngine
 	// player location & direction
 	enum PlayerState { idling=0, moving=1, firing=2} player_state = idling;
 	const int player_direction_none = 4;
-	olc::vf2d player_pos = { 230.0f,140.0f };
+	olc::vf2d player_pos = { 384.0f, 160.0f};
 	float player_speed = 180.0f;
 	int player_direction = 7;
 	bool player_reverse = false;
 
 	// player sprite
-	AnimatedSprite* playerSprite;
+	AnimatedSprite* player_sprite;
 	olc::vi2d player_sprite_size{ 32, 32 };
 	olc::vi2d sprite_offset { player_sprite_size.x / 2, player_sprite_size.y / 2 };
 	float player_idling_anim_speed = 0.15f;
@@ -62,36 +65,36 @@ public:
 
 	void InitialisePlayerSprite()
 	{
-		playerSprite = new AnimatedSprite("resources/gent.png");
-		playerSprite->SetFrameSize({ 32, 32 });
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,  0}, {32,  0}, {64,  0} });	// 0 : idle nw
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0, 32}, {32, 32}, {64, 32} });	// 1 : idle n
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0, 64}, {32, 64}, {64, 64} });	// 2 : idle ne
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0, 96}, {32, 96}, {64, 96} });	// 3 : idle w
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,128}, {32,128}, {64,128} });	// 4 : idle --
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,160}, {32,160}, {64,160} });	// 5 : idle e
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,192}, {32,192}, {64,192} });	// 6 : idle sw
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,224}, {32,224}, {64,224} });	// 7 : idle s
-		playerSprite->AddAnimation(player_idling_anim_speed, { {0,256}, {32,256}, {64,256} });	// 8 : idle se
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,  0}, {128,  0}, {160,  0}, {192,  0} }); //  9 : move nw
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96, 32}, {128, 32}, {160, 32}, {192, 32} }); // 10 : move n
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96, 64}, {128, 64}, {160, 64}, {192, 64} });	// 11 : move ne
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96, 96}, {128, 96}, {160, 96}, {192, 96} });	// 12 : move w
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,128}, {128,128}, {160,128}, {192,128} });	// 13 : move --
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,160}, {128,160}, {160,160}, {192,160} });	// 14 : move e
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,192}, {128,192}, {160,192}, {192,192} });	// 15 : move sw
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,224}, {128,224}, {160,224}, {192,224} });	// 16 : move s
-		playerSprite->AddAnimation(player_moving_anim_speed, { { 96,256}, {128,256}, {160,256}, {192,256} });	// 17 : move se
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,  0}, {256,  0}, {288,  0} });	// 18 : fire nw
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224, 32}, {256, 32}, {288, 32} });	// 19 : fire n
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224, 64}, {256, 64}, {288, 64} });	// 20 : fire ne
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224, 96}, {256, 96}, {288, 96} });	// 21 : fire w
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,128}, {256,128}, {288,128} });	// 22 : fire --
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,160}, {256,160}, {288,160} });	// 23 : fire e
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,192}, {256,192}, {288,192} });	// 24 : fire sw
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,224}, {256,224}, {288,224} });	// 25 : fire s
-		playerSprite->AddAnimation(player_firing_anim_speed, { {224,256}, {256,256}, {288,256} });	// 27 : fire se
-		playerSprite->UseAnimation(7);
+		player_sprite = new AnimatedSprite("resources/gent.png");
+		player_sprite->SetFrameSize({ 32, 32 });
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,  0}, {32,  0}, {64,  0} });	// 0 : idle nw
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0, 32}, {32, 32}, {64, 32} });	// 1 : idle n
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0, 64}, {32, 64}, {64, 64} });	// 2 : idle ne
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0, 96}, {32, 96}, {64, 96} });	// 3 : idle w
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,128}, {32,128}, {64,128} });	// 4 : idle --
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,160}, {32,160}, {64,160} });	// 5 : idle e
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,192}, {32,192}, {64,192} });	// 6 : idle sw
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,224}, {32,224}, {64,224} });	// 7 : idle s
+		player_sprite->AddAnimation(player_idling_anim_speed, { {0,256}, {32,256}, {64,256} });	// 8 : idle se
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,  0}, {128,  0}, {160,  0}, {192,  0} }); //  9 : move nw
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96, 32}, {128, 32}, {160, 32}, {192, 32} }); // 10 : move n
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96, 64}, {128, 64}, {160, 64}, {192, 64} });	// 11 : move ne
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96, 96}, {128, 96}, {160, 96}, {192, 96} });	// 12 : move w
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,128}, {128,128}, {160,128}, {192,128} });	// 13 : move --
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,160}, {128,160}, {160,160}, {192,160} });	// 14 : move e
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,192}, {128,192}, {160,192}, {192,192} });	// 15 : move sw
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,224}, {128,224}, {160,224}, {192,224} });	// 16 : move s
+		player_sprite->AddAnimation(player_moving_anim_speed, { { 96,256}, {128,256}, {160,256}, {192,256} });	// 17 : move se
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,  0}, {256,  0}, {288,  0} });	// 18 : fire nw
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224, 32}, {256, 32}, {288, 32} });	// 19 : fire n
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224, 64}, {256, 64}, {288, 64} });	// 20 : fire ne
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224, 96}, {256, 96}, {288, 96} });	// 21 : fire w
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,128}, {256,128}, {288,128} });	// 22 : fire --
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,160}, {256,160}, {288,160} });	// 23 : fire e
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,192}, {256,192}, {288,192} });	// 24 : fire sw
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,224}, {256,224}, {288,224} });	// 25 : fire s
+		player_sprite->AddAnimation(player_firing_anim_speed, { {224,256}, {256,256}, {288,256} });	// 27 : fire se
+		player_sprite->UseAnimation(7);
 	}
 
 
@@ -116,13 +119,28 @@ public:
 		delete terrain_blocks_spr;
 	}
 
+	olc::vi2d WorldToMap(const olc::vf2d& worldcoords) {
+		return { WorldXToMap(worldcoords.x), WorldYToMap(worldcoords.y) };
+	}
+
+	int WorldXToMap(float world_x) {
+		return (int)(world_x / terrain_tile_width);
+	}
+
+	int WorldYToMap(float world_y) {
+		return (int)(world_y / terrain_tile_height);
+	}
+
 	void DrawTerain(olc::vu2d position) {
 
 		int camera_x = (int) floor(camera_pos.x);
 		int camera_y = (int) floor(camera_pos.y);
 
-		int map_start_x_block = camera_x / terrain_tile_width;
-		int map_start_y_block = camera_y / terrain_tile_height;
+		olc::vi2d map_start = WorldToMap(camera_pos);
+
+		int map_start_x_block = map_start.x;
+		int map_start_y_block = map_start.y;
+
 		int x_offset_to_screen = camera_x % terrain_tile_width;
 		int y_offset_to_screen = camera_y % terrain_tile_height;
 
@@ -146,6 +164,10 @@ public:
 						terrain_blocks_spr, 
 						{ block_x, block_y }, 
 						terrain_block_size);
+				//DrawPartialDecal({ (float) (i * terrain_tile_width - x_offset_to_screen), (float) (j * terrain_tile_height - y_offset_to_screen) },
+				//	terrain_blocks_dec,
+				//	{ (float) block_x, (float) block_y },
+				//	terrain_block_size);
 				i_pos++;
 			}
 			j_pos++;
@@ -154,6 +176,94 @@ public:
 
 // ========================================================================================================================
 // END     Terrain
+// ========================================================================================================================
+
+
+
+// ========================================================================================================================
+// START   Collision with Terrain
+// ========================================================================================================================
+
+
+	bool IsMapPassable(int x, int y) {
+		if (x < 0) return false;
+		if (y < 0) return false;
+		if (x >= map_size.x) return false;
+		if (y >= map_size.x) return false;
+		int map_value = map[y * map_size.x + x] - 1;
+		return (map_value < 20);
+	}
+
+
+	olc::vf2d CollisionWithTerrain(olc::vf2d player_delta) {
+
+		bool blocked;
+		float dx_orig = player_delta.x;
+		float dy_orig = player_delta.y;
+		float dx_new = dx_orig;
+		float dy_new = dy_orig;
+
+		if (dx_orig != 0.0f) {	
+			float player_bounding_box_x = player_pos.x;
+			if (dx_orig > 0) player_bounding_box_x += (player_sprite_size.x -1);
+			int map_block_x = WorldXToMap(player_bounding_box_x + dx_orig);
+			int map_block_y_top = (int)(floor(player_pos.y + player_sprite_size.y / 2) / terrain_tile_height);
+			int map_block_y_btm = (int)(floor(player_pos.y + player_sprite_size.y - 1) / terrain_tile_height);
+
+			blocked = false;
+			for (int j = map_block_y_top; j <= map_block_y_btm; j++) {
+				if (!IsMapPassable(map_block_x, j)) {
+					blocked = true;
+					break;
+				}
+			}
+			if (blocked) {
+				if (dx_orig < 0)
+					dx_new = (float)((map_block_x + 1) * terrain_tile_width) - player_bounding_box_x;
+				else
+					dx_new = (float)((map_block_x) * terrain_tile_width -1) - player_bounding_box_x;
+			}
+
+		}
+
+		if (dy_orig != 0.0f) {
+			float player_bounding_box_y;
+			if (dy_orig < 0) 
+				player_bounding_box_y = player_pos.y + player_sprite_size.y/2 - 1;
+			else
+				player_bounding_box_y = player_pos.y + player_sprite_size.y - 1;
+			int map_block_y = (int)(floor(player_bounding_box_y + dy_orig) / terrain_tile_height);
+			int map_block_x_left = (int)(floor(player_pos.x) / terrain_tile_width);
+			int map_block_x_right = (int)(floor(player_pos.x + player_sprite_size.x - 1) / terrain_tile_width);
+
+			blocked = false;
+			for (int i = map_block_x_left; i <= map_block_x_right; i++) {
+				if (!IsMapPassable(i, map_block_y)) {
+					blocked = true;
+					break;
+				}
+			}
+			if (blocked) {
+				if (dy_orig < 0)
+					dy_new = (float)((map_block_y + 1) * terrain_tile_height) - player_bounding_box_y;
+				else
+					dy_new = (float)((map_block_y)*terrain_tile_height - 1) - player_bounding_box_y;
+			}
+		}
+		return { dx_new, dy_new };
+	}
+
+
+
+
+
+
+
+
+
+
+// ========================================================================================================================
+// END     Collision with Terrain
 // ========================================================================================================================
 
 
@@ -169,47 +279,48 @@ public:
 	bool OnUserDestroy() override
 	{
 		DestroyTerrain();
-		delete playerSprite;
+		delete player_sprite;
 		return true;
 	}
 
+	olc::vf2d WorldToScreen(olc::vf2d pos) {
+		return (pos - camera_pos);
+	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+
 		controller.Update(fElapsedTime);
-
-		HandleUserInput(fElapsedTime);
-
-		UpdateCameraPos();
 		Clear(olc::DARK_GREY);
+		HandleUserInput(fElapsedTime);
+		UpdateCameraPos();
+		DrawTerain({ 0,0 });
 
-		this->DrawTerain({ 0,0 });
+		// work out which animation the player sprite should be using and then draw the sprite
+		int player_anim_frame = player_reverse ? 8 - player_direction : player_direction;
+		player_anim_frame += (player_state == firing) ? 18 : 0;
+		player_anim_frame += (player_state == moving) ? 9 : 0;
+
+		player_sprite->Update((player_state == moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
+		player_sprite->UseAnimation(player_anim_frame);
+		player_sprite->Draw(this, WorldToScreen(player_pos));
 
 #ifdef SHOW_DEBUG_INFO
-		DrawRect(player_pos - camera_pos - sprite_offset, { 32, 32 }, olc::RED);
-		DrawString(player_pos-camera_pos - sprite_offset, std::to_string(player_direction));
+		DrawLine({ 0, ScreenHeight() / 2 }, { ScreenWidth(), ScreenHeight() / 2 });
+		DrawLine({ ScreenWidth() / 2, 0 }, { ScreenWidth() / 2, ScreenHeight() });
+		DrawRect(WorldToScreen(player_pos), { player_sprite_size.x -1, player_sprite_size.y - 1 }, olc::RED);
+		DrawString(WorldToScreen(player_pos), std::to_string(player_direction));
+		DrawString({ 10,10 }, "Ply: " + std::to_string(player_pos.x) + ", " + std::to_string(player_pos.y));
+		DrawString({ 10,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
+		DrawString({ 10,30 }, "Wld: " + std::to_string(world_size.x) + ", " + std::to_string(world_size.y));
 #endif
-		int player_anim_frame = player_reverse ? 8 - player_direction : player_direction;
-		playerSprite->Update(player_reverse ? -fElapsedTime : fElapsedTime);
-
-		if (player_state == firing) player_anim_frame += 18;
-		if (player_state == moving) player_anim_frame += 9;
-
-
-		playerSprite->UseAnimation(player_anim_frame);
-		playerSprite->Draw(this, player_pos - camera_pos);
-
-
-//		DrawString({ 10,10 }, "Ply: " + std::to_string(player_pos.x) + ", " + std::to_string(player_pos.y));
-//		DrawString({ 10,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
-//		DrawString({ 10,30 }, "Wld: " + std::to_string(world_size.x) + ", " + std::to_string(world_size.y));
 		return true;
 	}
 
 	void UpdateCameraPos() {
 		camera_pos = player_pos + sprite_offset - screen_centre;
-		camera_pos.x = bindToRange(camera_pos.x, 0.0f, (float)world_size.x - ScreenWidth());
-		camera_pos.y = bindToRange(camera_pos.y, 0.0f, (float)world_size.y - ScreenHeight());
+		camera_pos.x = BindToRange(camera_pos.x, 0.0f, (float)world_size.x - ScreenWidth());
+		camera_pos.y = BindToRange(camera_pos.y, 0.0f, (float)world_size.y - ScreenHeight());
 	}
 
 	void HandleUserInput(float elapsedTime) {
@@ -219,6 +330,26 @@ public:
 				
 		int y_direction = 0;
 		int x_direction = 0;
+
+		if (GetKey(olc::NP7).bHeld) {
+			y_direction = -1; x_direction = -1;
+		}
+
+
+
+		if (GetKey(olc::NP9).bHeld) {
+			y_direction = -1; x_direction = 1;
+		}
+
+
+		if (GetKey(olc::NP1).bHeld) {
+			y_direction = 1; x_direction = -1;
+		}
+
+		if (GetKey(olc::NP3).bHeld) {
+			y_direction = 1; x_direction = 1;
+		}
+
 
 		if (GetKey(key_up).bHeld  || y_delta>0) y_direction = -1;		
 		if (GetKey(key_down).bHeld || y_delta<0) y_direction = 1;
@@ -246,12 +377,16 @@ public:
 
 			olc::vf2d player_pos_delta = { (float)x_direction, (float)y_direction };
 			player_pos_delta *= speed;
+
+			// collision detection here against terrain (before player_pos is updated)
+
+			player_pos_delta = CollisionWithTerrain(player_pos_delta);
+
 			player_pos += player_pos_delta;
 
-			player_pos.x = bindToRange(player_pos.x, 0.0f, world_size.x - (float)player_sprite_size.x);
-			player_pos.y = bindToRange(player_pos.y, 0.0f, world_size.y - (float)player_sprite_size.y);
+			player_pos.x = BindToRange(player_pos.x, 0.0f, world_size.x - (float)player_sprite_size.x);
+			player_pos.y = BindToRange(player_pos.y, 0.0f, world_size.y - (float)player_sprite_size.y);
 
-			// check for collisions
 
 		}
 

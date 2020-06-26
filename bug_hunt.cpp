@@ -195,59 +195,56 @@ public:
 	}
 
 
-	olc::vf2d CollisionWithTerrain(olc::vf2d player_delta) {
+	olc::vf2d CollisionWithTerrain(const olc::vf2d& position, const olc::vf2d& delta, const olc::vi2d& bb_tl, const olc::vi2d& bb_br) {
 
 		bool blocked;
-		float dx_orig = player_delta.x;
-		float dy_orig = player_delta.y;
+		float dx_orig = delta.x;
+		float dy_orig = delta.y;
 		float dx_new = dx_orig;
 		float dy_new = dy_orig;
 
 		if (dx_orig != 0.0f) {	
-			float player_bounding_box_x = player_pos.x;
-			if (dx_orig > 0) player_bounding_box_x += (player_sprite_size.x -1);
-			int map_block_x = WorldXToMap(player_bounding_box_x + dx_orig);
-			int map_block_y_top = (int)(floor(player_pos.y + player_sprite_size.y / 2) / terrain_tile_height);
-			int map_block_y_btm = (int)(floor(player_pos.y + player_sprite_size.y - 1) / terrain_tile_height);
+			float bounding_box_x = position.x;
+			bounding_box_x += (float)(dx_orig < 0) ? bb_tl.x : bb_br.x;
+			int map_block_x = WorldXToMap(bounding_box_x + dx_orig);
+			int map_block_y_top = WorldYToMap(position.y + bb_tl.y);
+			int map_block_y_btm = WorldYToMap(position.y + bb_br.y);
 
 			blocked = false;
-			for (int j = map_block_y_top; j <= map_block_y_btm; j++) {
-				if (!IsMapPassable(map_block_x, j)) {
+			for (int map_block_y = map_block_y_top; map_block_y <= map_block_y_btm; map_block_y++) {
+				if (!IsMapPassable(map_block_x, map_block_y)) {
 					blocked = true;
 					break;
 				}
 			}
 			if (blocked) {
 				if (dx_orig < 0)
-					dx_new = (float)((map_block_x + 1) * terrain_tile_width) - player_bounding_box_x;
+					dx_new = (float)((map_block_x + 1) * terrain_tile_width) - bounding_box_x;
 				else
-					dx_new = (float)((map_block_x) * terrain_tile_width -1) - player_bounding_box_x;
+					dx_new = (float)((map_block_x) * terrain_tile_width -1) - bounding_box_x;
 			}
-
 		}
 
 		if (dy_orig != 0.0f) {
-			float player_bounding_box_y;
-			if (dy_orig < 0) 
-				player_bounding_box_y = player_pos.y + player_sprite_size.y/2 - 1;
-			else
-				player_bounding_box_y = player_pos.y + player_sprite_size.y - 1;
-			int map_block_y = (int)(floor(player_bounding_box_y + dy_orig) / terrain_tile_height);
-			int map_block_x_left = (int)(floor(player_pos.x) / terrain_tile_width);
-			int map_block_x_right = (int)(floor(player_pos.x + player_sprite_size.x - 1) / terrain_tile_width);
+			float bounding_box_y = position.y;
+			bounding_box_y += (dy_orig < 0) ? bb_tl.y : bb_br.y;
+
+			int map_block_y = WorldYToMap(bounding_box_y + dy_orig);
+			int map_block_x_left = WorldXToMap(position.x + bb_tl.x);
+			int map_block_x_right = WorldXToMap(position.x + bb_br.x);
 
 			blocked = false;
-			for (int i = map_block_x_left; i <= map_block_x_right; i++) {
-				if (!IsMapPassable(i, map_block_y)) {
+			for (int map_block_x = map_block_x_left; map_block_x <= map_block_x_right; map_block_x++) {
+				if (!IsMapPassable(map_block_x, map_block_y)) {
 					blocked = true;
 					break;
 				}
 			}
 			if (blocked) {
 				if (dy_orig < 0)
-					dy_new = (float)((map_block_y + 1) * terrain_tile_height) - player_bounding_box_y;
+					dy_new = (float)((map_block_y + 1) * terrain_tile_height) - bounding_box_y;
 				else
-					dy_new = (float)((map_block_y)*terrain_tile_height - 1) - player_bounding_box_y;
+					dy_new = (float)((map_block_y)*terrain_tile_height - 1) - bounding_box_y;
 			}
 		}
 		return { dx_new, dy_new };
@@ -323,6 +320,11 @@ public:
 		camera_pos.y = BindToRange(camera_pos.y, 0.0f, (float)world_size.y - ScreenHeight());
 	}
 
+
+	olc::vi2d player_bb_terrain_top_left{ 0, player_sprite_size.y / 2 };
+	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1, player_sprite_size.y - 1 };
+
+
 	void HandleUserInput(float elapsedTime) {
 
 		float x_delta = controller.GetLeftStickX();
@@ -334,18 +336,12 @@ public:
 		if (GetKey(olc::NP7).bHeld) {
 			y_direction = -1; x_direction = -1;
 		}
-
-
-
 		if (GetKey(olc::NP9).bHeld) {
 			y_direction = -1; x_direction = 1;
 		}
-
-
 		if (GetKey(olc::NP1).bHeld) {
 			y_direction = 1; x_direction = -1;
 		}
-
 		if (GetKey(olc::NP3).bHeld) {
 			y_direction = 1; x_direction = 1;
 		}
@@ -380,7 +376,7 @@ public:
 
 			// collision detection here against terrain (before player_pos is updated)
 
-			player_pos_delta = CollisionWithTerrain(player_pos_delta);
+			player_pos_delta = CollisionWithTerrain(player_pos, player_pos_delta, player_bb_terrain_top_left, player_bb_terrain_btm_right);
 
 			player_pos += player_pos_delta;
 

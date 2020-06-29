@@ -186,18 +186,15 @@ public:
 
 
 	bool IsMapPassable(int x, int y) {
-		if (x < 0) return false;
-		if (y < 0) return false;
-		if (x >= map_size.x) return false;
-		if (y >= map_size.x) return false;
+		if (x < 0 || x >= map_size.x) return false;
+		if (y < 0 || y >= map_size.y) return false;
 		int map_value = map[y * map_size.x + x] - 1;
-		return (map_value < 20);
+		return (map_value < 20 || map_value>= 40);
 	}
 
 
 	olc::vf2d CollisionWithTerrain(const olc::vf2d& position, const olc::vf2d& delta, const olc::vi2d& bb_tl, const olc::vi2d& bb_br) {
 
-		bool blocked;
 		float dx_orig = delta.x;
 		float dy_orig = delta.y;
 		float dx_new = dx_orig;
@@ -205,12 +202,12 @@ public:
 
 		if (dx_orig != 0.0f) {	
 			float bounding_box_x = position.x;
-			bounding_box_x += (float)(dx_orig < 0) ? bb_tl.x : bb_br.x;
+			bounding_box_x += (dx_orig < 0) ? bb_tl.x : bb_br.x;
 			int map_block_x = WorldXToMap(bounding_box_x + dx_orig);
 			int map_block_y_top = WorldYToMap(position.y + bb_tl.y);
 			int map_block_y_btm = WorldYToMap(position.y + bb_br.y);
 
-			blocked = false;
+			bool blocked = false;
 			for (int map_block_y = map_block_y_top; map_block_y <= map_block_y_btm; map_block_y++) {
 				if (!IsMapPassable(map_block_x, map_block_y)) {
 					blocked = true;
@@ -233,7 +230,7 @@ public:
 			int map_block_x_left = WorldXToMap(position.x + bb_tl.x);
 			int map_block_x_right = WorldXToMap(position.x + bb_br.x);
 
-			blocked = false;
+			bool blocked = false;
 			for (int map_block_x = map_block_x_left; map_block_x <= map_block_x_right; map_block_x++) {
 				if (!IsMapPassable(map_block_x, map_block_y)) {
 					blocked = true;
@@ -249,15 +246,6 @@ public:
 		}
 		return { dx_new, dy_new };
 	}
-
-
-
-
-
-
-
-
-
 
 // ========================================================================================================================
 // END     Collision with Terrain
@@ -321,7 +309,7 @@ public:
 	}
 
 
-	olc::vi2d player_bb_terrain_top_left{ 0, player_sprite_size.y / 2 };
+	olc::vi2d player_bb_terrain_top_left{ 0, 0};
 	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1, player_sprite_size.y - 1 };
 
 

@@ -35,7 +35,7 @@ class BugHunt : public olc::PixelGameEngine
 	olc::vi2d screen_centre = screen_size / 2;
 
 	// player location & direction
-	enum PlayerState { idling=0, moving=1, firing=2} player_state = idling;
+	enum class PlayerState { idling=0, moving=1, firing=2} player_state = PlayerState::idling;
 	const int player_direction_none = 4;
 	olc::vf2d player_pos = { 384.0f, 160.0f};
 	float player_speed = 180.0f;
@@ -295,10 +295,10 @@ public:
 
 		// work out which animation the player sprite should be using and then draw the sprite
 		int player_anim_frame = player_reverse ? 8 - player_direction : player_direction;
-		player_anim_frame += (player_state == firing) ? 18 : 0;
-		player_anim_frame += (player_state == moving) ? 9 : 0;
+		player_anim_frame += (player_state == PlayerState::firing) ? 18 : 0;
+		player_anim_frame += (player_state == PlayerState::moving) ? 9 : 0;
 
-		player_sprite->Update((player_state == moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
+		player_sprite->Update((player_state == PlayerState::moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
 		player_sprite->UseAnimation(player_anim_frame);
 		player_sprite->Draw(this, WorldToScreen(player_pos));
 
@@ -357,15 +357,15 @@ public:
 		bool player_firing = ((GetKey(olc::SPACE).bHeld) || controller.GetButton(A).bHeld);
 		bool player_moving = (y_direction != 0 || x_direction != 0);
 
-		if (player_firing) player_state = firing;
-		else if (player_moving) player_state = moving;
-		else player_state = idling;
+		if (player_firing) player_state = PlayerState::firing;
+		else if (player_moving) player_state = PlayerState::moving;
+		else player_state = PlayerState::idling;
 
 		// quick bodge to keep char facing in same direction when they stop moving
 		int new_player_direction = 1 + x_direction + (y_direction + 1) * 3;
 		if (new_player_direction != player_direction_none) player_direction = new_player_direction;
 
-		if(player_state == moving) {
+		if(player_state == PlayerState::moving) {
 			// move sprite
 			float speed = player_speed * elapsedTime;
 			if 	(y_direction != 0 && x_direction != 0) speed *= 0.707f;		// account for diagonal travel

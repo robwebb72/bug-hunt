@@ -95,25 +95,59 @@ private:
 		font_map.clear();
 	}
 
+	olc::Sprite* pSprite = nullptr;
+	olc::Decal* pDecal = nullptr;
+
 public:
 	RWFont() {
 	}
 
 	void LoadResources(std::string font_name) {
 		LoadFontMetrics(font_name + ".fnt");
+		pSprite = new olc::Sprite();
+		olc::rcode ret = pSprite->LoadFromFile(font_name+".png");
+		if (ret != olc::OK) throw "Error reading font image file: " + font_name + ".png";
+		pDecal = new olc::Decal(pSprite);
 	}
 
+	void Print(olc::PixelGameEngine* engine, olc::vi2d pos, std::string text) {
+		if (text.size() == 0) return;
+//		engine->SetPixelMode(olc::Pixel::ALPHA);
+		for (char& c : text) {
+			FontMetricChar* metric = font_map[c];
+			if (metric != nullptr) {
+
+
+				//engine->DrawPartialSprite(
+				//	{ pos.x + metric->xoffset, pos.y + metric->yoffset },
+				//	pSprite, 
+				//	{ metric->x, metric->y },
+				//	{ metric->width, metric->height }
+				//);
+
+				engine->DrawPartialDecal(
+					{ (float) pos.x + metric->xoffset, (float)pos.y + metric->yoffset },
+					pDecal,
+					{ (float) metric->x, (float) metric->y },
+					{ (float) metric->width, (float) metric->height }
+				);
+
+
+
+					
+
+
+				pos.x += metric->xadvance;
+			}
+		}
+//		engine->SetPixelMode(olc::Pixel::NORMAL);
+
+	}
 
 	~RWFont() {
 		DeleteFontMetrics();
+		if (pDecal != nullptr) delete pDecal;
 	}
 };
-
-
-
-
-
-
-
 
 #endif

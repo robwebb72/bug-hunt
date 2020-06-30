@@ -54,6 +54,9 @@ class BugHunt : public olc::PixelGameEngine
 	olc::Sprite* terrain_blocks_spr;
 	olc::Decal* terrain_blocks_dec;
 
+	// fonts
+	RWFont rob8bitFont;
+
 	olc::vf2d camera_pos = { 0.0f, 0.0f };
 
 public:
@@ -98,19 +101,6 @@ public:
 		player_sprite->AddAnimation(player_firing_anim_speed, { {224,256}, {256,256}, {288,256} });	// 27 : fire se
 		player_sprite->UseAnimation(7);
 	}
-
-// ========================================================================================================================
-// START     Font Handling
-// ========================================================================================================================
-	RWFont freePixelFont;
-
-	void InitialiseFonts() {
-		freePixelFont.LoadResources("resources/font/freepixel");
-	}
-// ========================================================================================================================
-// END       Font Handling
-// ========================================================================================================================
-
 
 
 // ========================================================================================================================
@@ -175,7 +165,8 @@ public:
 				int block_x = terrain_tile_width * (map_value % tile_sheet_tiles_per_row);
 				int block_y = terrain_tile_height * (map_value / tile_sheet_tiles_per_row);
 
-				DrawPartialSprite({ i * terrain_tile_width - x_offset_to_screen, j * terrain_tile_height - y_offset_to_screen },
+				DrawPartialSprite(
+					{ i * terrain_tile_width - x_offset_to_screen, j * terrain_tile_height - y_offset_to_screen },
 						terrain_blocks_spr, 
 						{ block_x, block_y }, 
 						terrain_block_size);
@@ -274,7 +265,7 @@ public:
 		try {
 			InitialisePlayerSprite();
 			InitialiseTerrain();
-			InitialiseFonts();
+			rob8bitFont.LoadResources("resources/font/rob8bit");
 		}
 		catch (std::string error) {
 			return false;
@@ -319,6 +310,7 @@ public:
 		DrawString({ 10,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
 		DrawString({ 10,30 }, "Wld: " + std::to_string(world_size.x) + ", " + std::to_string(world_size.y));
 #endif
+		rob8bitFont.Print(this, { 40, 40 }, "Hello World!  0123456789");
 		return true;
 	}
 
@@ -328,10 +320,8 @@ public:
 		camera_pos.y = BindToRange(camera_pos.y, 0.0f, (float)world_size.y - ScreenHeight());
 	}
 
-
 	olc::vi2d player_bb_terrain_top_left{ 0, 0};
 	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1, player_sprite_size.y - 1 };
-
 
 	void HandleUserInput(float elapsedTime) {
 
@@ -398,8 +388,7 @@ public:
 
 };
 
-int main()
-{
+int main() {
 	BugHunt bugHunt;
 	if (bugHunt.Construct(screen_size.x, screen_size.y, 2, 2, false,false))
 		bugHunt.Start();

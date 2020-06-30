@@ -1,10 +1,10 @@
 
-#ifndef __R72_ANIMATED_SPRITE__
-#define __R72_ANIMATED_SPRITE__
+#ifndef __R72_OLC_ANIMATED_SPRITE__
+#define __R72_OLC_ANIMATED_SPRITE__
 
 #include "olcPixelGameEngine.h"
+#include <iostream>
 #include <vector>
-
 
 
 struct SpriteAnimation {
@@ -69,16 +69,18 @@ private:
 	int currentAnimation = 0;
 
 public: 
-	AnimatedSprite(std::string filename) {
-		// TODO: error handling if file not found
-		pSprite = new olc::Sprite(filename);
+
+	void LoadResource(std::string filename) {
+		pSprite = new olc::Sprite();
+		olc::rcode ret = pSprite->LoadFromFile(filename);
+		if (ret != olc::OK) throw "Error reading file: " + filename;
 		pDecal = new olc::Decal(pSprite);
 	}
 
 	~AnimatedSprite() {
 		for (auto animation : animations) delete animation;
-		delete pDecal;
-		delete pSprite;
+		if (pDecal!=nullptr) delete pDecal;
+		if (pSprite!=nullptr) delete pSprite;
 	}
 
 	void UseAnimation(int i) {
@@ -106,9 +108,6 @@ public:
 		animations.push_back(new SpriteAnimation(frameTime, frames));
 	}
 
-	void AddFrames(int i, std::vector<olc::vu2d> vectors) {
-		animations.at(i)->AddFrames(vectors);
-	}
 };
 
 

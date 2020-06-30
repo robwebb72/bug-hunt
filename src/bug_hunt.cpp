@@ -3,7 +3,7 @@
 #include "Zix_PGE_Controller.h"
 #include "map.cpp"
 #include "anim_sprite.cpp"
-
+#include "font_sheet.cpp"
 
 //#define SHOW_DEBUG_INFO
 
@@ -45,7 +45,7 @@ class BugHunt : public olc::PixelGameEngine
 	// player sprite
 	AnimatedSprite* player_sprite;
 	olc::vi2d player_sprite_size{ 32, 32 };
-	olc::vi2d sprite_offset { player_sprite_size.x / 2, player_sprite_size.y / 2 };
+	olc::vi2d sprite_centre { player_sprite_size.x / 2, player_sprite_size.y / 2 };
 	float player_idling_anim_speed = 0.15f;
 	float player_moving_anim_speed = 0.10f;
 	float player_firing_anim_speed = 0.08f;
@@ -65,7 +65,9 @@ public:
 
 	void InitialisePlayerSprite()
 	{
-		player_sprite = new AnimatedSprite("resources/gent.png");
+		player_sprite = new AnimatedSprite();
+		player_sprite->LoadResource("resources/gent.png");
+
 		player_sprite->SetFrameSize({ 32, 32 });
 		player_sprite->AddAnimation(player_idling_anim_speed, { {0,  0}, {32,  0}, {64,  0} });	// 0 : idle nw
 		player_sprite->AddAnimation(player_idling_anim_speed, { {0, 32}, {32, 32}, {64, 32} });	// 1 : idle n
@@ -96,6 +98,19 @@ public:
 		player_sprite->AddAnimation(player_firing_anim_speed, { {224,256}, {256,256}, {288,256} });	// 27 : fire se
 		player_sprite->UseAnimation(7);
 	}
+
+// ========================================================================================================================
+// START     Font Handling
+// ========================================================================================================================
+	RWFont freePixelFont;
+
+	void InitialiseFonts() {
+		freePixelFont.LoadResources("resources/font/freepixel");
+	}
+// ========================================================================================================================
+// END       Font Handling
+// ========================================================================================================================
+
 
 
 // ========================================================================================================================
@@ -256,8 +271,14 @@ public:
 	bool OnUserCreate() override
 	{
 		controller.Initialize();
-		InitialisePlayerSprite();
-		InitialiseTerrain();
+		try {
+			InitialisePlayerSprite();
+			InitialiseTerrain();
+			InitialiseFonts();
+		}
+		catch (std::string error) {
+			return false;
+		}
 		return true;
 	}
 
@@ -274,9 +295,8 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-
-		controller.Update(fElapsedTime);
 		Clear(olc::DARK_GREY);
+		controller.Update(fElapsedTime);
 		HandleUserInput(fElapsedTime);
 		UpdateCameraPos();
 		DrawTerain({ 0,0 });
@@ -303,7 +323,7 @@ public:
 	}
 
 	void UpdateCameraPos() {
-		camera_pos = player_pos + sprite_offset - screen_centre;
+		camera_pos = player_pos + sprite_centre - screen_centre;
 		camera_pos.x = BindToRange(camera_pos.x, 0.0f, (float)world_size.x - ScreenWidth());
 		camera_pos.y = BindToRange(camera_pos.y, 0.0f, (float)world_size.y - ScreenHeight());
 	}

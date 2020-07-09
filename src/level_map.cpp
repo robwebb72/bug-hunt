@@ -1,17 +1,22 @@
 
 #include "olcPixelGameEngine.h"
 
-#include "map_layout.cpp"
+#include "map_data.cpp"
 
 class LevelMap {
 
 
 private:
-	olc::Sprite* terrain_blocks_spr;
-	olc::Decal* terrain_blocks_dec;
 
 
 	void LoadTerrain(std::string filename) {
+		terrain_tile_width = 16;
+		terrain_tile_height = 16;
+		tile_sheet_tiles_per_row = 20;
+		world_size = {map_size.x * terrain_tile_width, map_size.y * terrain_tile_height };
+		terrain_block_size = { terrain_tile_width, terrain_tile_height };
+		terrain_blocks_spr = nullptr;
+		terrain_blocks_dec = nullptr;
 		terrain_blocks_spr = new olc::Sprite(filename);
 		terrain_blocks_dec = new olc::Decal(terrain_blocks_spr);
 	}
@@ -27,24 +32,25 @@ private:
 		}
 	}
 
-public:
+	olc::Sprite* terrain_blocks_spr;
+	olc::Decal* terrain_blocks_dec;
 
 	int map_width = 100;
 	int map_height = 100;
-
-	int terrain_tile_width = 16;
-	int terrain_tile_height = 16;
-	int tile_sheet_tiles_per_row = 20;
+	int terrain_tile_width;
+	int terrain_tile_height;
+	int tile_sheet_tiles_per_row;
 	olc::vi2d map_size { map_width, map_height };
-	olc::vi2d world_size { map_size.x * terrain_tile_width, map_size.y * terrain_tile_height };
-	olc::vi2d terrain_block_size { terrain_tile_width, terrain_tile_height };
+	olc::vi2d terrain_block_size;
+
+public:
+
+	olc::vi2d world_size;
 
 
 
 
 	void Initialise() {
-		terrain_blocks_spr = nullptr;
-		terrain_blocks_dec = nullptr;
 		LoadTerrain("resources/blocks.png");
 	}
 
@@ -98,6 +104,9 @@ public:
 				int map_value = map[j_pos * map_width + i_pos]-1;
 				int block_x = terrain_tile_width * (map_value % tile_sheet_tiles_per_row);
 				int block_y = terrain_tile_height * (map_value / tile_sheet_tiles_per_row);
+
+				olc::vi2d screen_pos = { i * terrain_tile_width - x_offset_to_screen, (int)j * terrain_tile_height - y_offset_to_screen };
+
 
 				engine->DrawPartialSprite(
 					{ i * terrain_tile_width - x_offset_to_screen, (int) j * terrain_tile_height - y_offset_to_screen },

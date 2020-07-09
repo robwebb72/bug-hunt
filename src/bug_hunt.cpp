@@ -218,6 +218,7 @@ public:
 
 		player_sprite->Update((player_state == PlayerState::moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
 		player_sprite->UseAnimation(player_anim_frame);
+		olc::vf2d pos = WorldToScreen(player_pos);
 		player_sprite->Draw(this, WorldToScreen(player_pos));
 
 #ifdef SHOW_DEBUG_INFO

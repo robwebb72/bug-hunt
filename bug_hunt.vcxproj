@@ -144,6 +144,7 @@
     <ClCompile Include="src\font_sheet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\font_sheet.h" />
     <ClInclude Include="src\olcPixelGameEngine.h" />
     <ClInclude Include="src\Zix_PGE_Controller.h" />
   </ItemGroup>

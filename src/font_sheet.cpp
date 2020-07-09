@@ -1,12 +1,7 @@
 
-#ifndef __R72_OLC_FONT_SHEET__
-#define __R72_OLC_FONT_SHEET__
-
+#include "font_sheet.h"
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <map>
-#include "olcPixelGameEngine.h"
 
 
 // TODO: [2020-06-29]  This code is rather fragile and might fall down if the file is in an unexpected format.  Add error handling!  RW.
@@ -57,97 +52,77 @@ public:
 };
 
 
-class RWFont {
 
-private:
-	int char_count = 0;
-	std::map<int, FontMetricChar*> font_map;
+void RWFont::LoadFontMetrics(std::string filename) {
+	std::ifstream metric_file(filename);
+	if (!metric_file) throw "Error opening font metric file: " + filename;
+	std::string current_line;
+	int line_number = 0;
 
-	void LoadFontMetrics(std::string filename) {
-		std::ifstream metric_file(filename);
-		if (!metric_file) throw "Error opening font metric file: " + filename;
-		std::string current_line;
-		int line_number = 0;
-
-		while (std::getline(metric_file, current_line)) {
-			std::size_t found_pos = current_line.find("char id");
-			if (found_pos == std::string::npos) continue;
-			try {
-				FontMetricChar char_metric(current_line);
-				if (char_metric.id < 32 || char_metric.id > 255) continue;
-				font_map[char_metric.id] = new FontMetricChar(char_metric);
-				char_count++;
-			}
-			catch (std::string& error) {
-				throw error + " file: " + filename + " (line:" + std::to_string(line_number)+")";
-			}
+	while (std::getline(metric_file, current_line)) {
+		std::size_t found_pos = current_line.find("char id");
+		if (found_pos == std::string::npos) continue;
+		try {
+			FontMetricChar char_metric(current_line);
+			if (char_metric.id < 32 || char_metric.id > 255) continue;
+			font_map[char_metric.id] = new FontMetricChar(char_metric);
+			char_count++;
 		}
-		if (char_count < 96) {
-			DeleteFontMetrics();
-			throw "Error loading font metric file: " + filename + " ( <96 characters found)";
+		catch (std::string& error) {
+			throw error + " file: " + filename + " (line:" + std::to_string(line_number)+")";
 		}
 	}
-
-	void DeleteFontMetrics() {
-		for (std::map<int, FontMetricChar*>::iterator it = font_map.begin(); it != font_map.end(); ++it) {
-			delete it->second;
-		}
-		font_map.clear();
-	}
-
-	olc::Sprite* pSprite = nullptr;
-	olc::Decal* pDecal = nullptr;
-
-public:
-	RWFont() {
-	}
-
-	void LoadResources(std::string font_name) {
-		LoadFontMetrics(font_name + ".fnt");
-		pSprite = new olc::Sprite();
-		olc::rcode ret = pSprite->LoadFromFile(font_name+".png");
-		if (ret != olc::OK) throw "Error reading font image file: " + font_name + ".png";
-		pDecal = new olc::Decal(pSprite);
-	}
-
-	void Print(olc::PixelGameEngine* engine, olc::vi2d pos, std::string text) {
-		if (text.size() == 0) return;
-//		engine->SetPixelMode(olc::Pixel::ALPHA);
-		for (char& c : text) {
-			FontMetricChar* metric = font_map[c];
-			if (metric != nullptr) {
-
-
-				//engine->DrawPartialSprite(
-				//	{ pos.x + metric->xoffset, pos.y + metric->yoffset },
-				//	pSprite, 
-				//	{ metric->x, metric->y },
-				//	{ metric->width, metric->height }
-				//);
-
-				engine->DrawPartialDecal(
-					{ (float) pos.x + metric->xoffset, (float)pos.y + metric->yoffset },
-					pDecal,
-					{ (float) metric->x, (float) metric->y },
-					{ (float) metric->width, (float) metric->height }
-				);
-
-
-
-					
-
-
-				pos.x += metric->xadvance;
-			}
-		}
-//		engine->SetPixelMode(olc::Pixel::NORMAL);
-
-	}
-
-	~RWFont() {
+	if (char_count < 96) {
 		DeleteFontMetrics();
-		if (pDecal != nullptr) delete pDecal;
+		throw "Error loading font metric file: " + filename + " ( <96 characters found)";
 	}
-};
+}
 
-#endif
+
+void RWFont::DeleteFontMetrics() {
+	for (std::map<int, FontMetricChar*>::iterator it = font_map.begin(); it != font_map.end(); ++it) {
+		delete it->second;
+	}
+	font_map.clear();
+}
+
+
+void RWFont::LoadResources(std::string font_name) {
+	LoadFontMetrics(font_name + ".fnt");
+	pSprite = new olc::Sprite();
+	olc::rcode ret = pSprite->LoadFromFile(font_name+".png");
+	if (ret != olc::OK) throw "Error reading font image file: " + font_name + ".png";
+	pDecal = new olc::Decal(pSprite);
+}
+
+
+void RWFont::Print(olc::PixelGameEngine* engine, olc::vi2d pos, std::string text, const olc::Pixel& tint) {
+	if (text.size() == 0) return;
+	for (char& c : text) {
+		if (c == '\n') {
+			// TODO: R(20.07.03) Need to be able to move to new line here - I need the font line height for this
+			pos.y += 10;
+			continue;
+		}
+		if (c < 32 || c>255) continue;	// best not draw chars out of scope
+
+		// TODO: R(20.07.03) If c is out of bounds, what happens here?
+		FontMetricChar* metric = font_map[c];
+		if (metric != nullptr) {
+			engine->DrawPartialDecal(
+				{ (float) pos.x + metric->xoffset, (float)pos.y + metric->yoffset },
+				pDecal,
+				{ (float) metric->x, (float) metric->y },
+				{ (float) metric->width, (float) metric->height },
+				{ 1.0f, 1.0f },
+				tint
+			);
+			pos.x += metric->xadvance;
+		}
+	}
+}
+
+RWFont::~RWFont() {
+	DeleteFontMetrics();
+	if (pDecal != nullptr) delete pDecal;
+}

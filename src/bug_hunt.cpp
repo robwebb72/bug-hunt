@@ -3,12 +3,9 @@
 #include "Zix_PGE_Controller.h"
 #include "map.cpp"
 #include "anim_sprite.cpp"
-#include "font_sheet.cpp"
+#include "font_sheet.h"
 
 //#define SHOW_DEBUG_INFO
-
-
-olc::vi2d screen_origin = { 0, 0 };
 olc::vi2d screen_size = { 640, 400 };
 
 

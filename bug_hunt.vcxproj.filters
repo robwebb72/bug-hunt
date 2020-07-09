@@ -32,5 +32,8 @@
     <ClInclude Include="src\Zix_PGE_Controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\font_sheet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

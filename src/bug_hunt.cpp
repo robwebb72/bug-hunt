@@ -254,6 +254,78 @@ public:
 // END     Collision with Terrain
 // ========================================================================================================================
 
+// ========================================================================================================================
+// START   Info Pane
+// ========================================================================================================================
+
+	olc::Sprite* info_pane_sprite = nullptr;
+	olc::Decal* info_pane_decal = nullptr;
+
+	olc::Sprite* health_bar_sprite = nullptr;
+	olc::Decal* health_bar_decal = nullptr;
+
+	olc::Sprite* char_icon_sprite = nullptr;
+	olc::Decal* char_icon_decal = nullptr;
+
+	void InitialiseInfoPane() {
+		// load graphics into sprites and decals
+		info_pane_sprite = new olc::Sprite();
+		health_bar_sprite = new olc::Sprite();
+		char_icon_sprite = new olc::Sprite();
+
+		olc::rcode ret;
+
+		ret = info_pane_sprite->LoadFromFile("resources/info_pane.png");
+		if (ret != olc::OK) throw "Error reading image file: resources/info_pane.png";
+		ret = health_bar_sprite->LoadFromFile("resources/health_bar.png");
+		if (ret != olc::OK) throw "Error reading image file: resources/health_bar.png";
+		ret = char_icon_sprite->LoadFromFile("resources/gent_icon.png");
+		if (ret != olc::OK) throw "Error reading image file: resources/gent_icon.png";
+
+		info_pane_decal = new olc::Decal(info_pane_sprite);
+		health_bar_decal = new olc::Decal(health_bar_sprite);
+		char_icon_decal = new olc::Decal(char_icon_sprite);
+
+	}
+
+	int player_lives = 3;
+	int player_mags = 4;
+	int player_keys = 12;
+	int player_health = 100;
+	int player_ammo = 100;
+
+	void DrawInfoPane() {
+
+		DrawDecal({ 0.0f, 0.0f }, info_pane_decal);
+		DrawDecal({ 0.0f, 0.0f }, char_icon_decal);
+		float health_bar = player_health / 100.0f * 30.0f;
+		float ammo_bar = player_ammo / 100.0f * 30.0f;
+
+		DrawPartialDecal({ 34.0f, 11.0f }, { health_bar, 4.0f }, health_bar_decal, { 0.0f, 0.0f }, { health_bar, 4.0f });
+		DrawPartialDecal({ 70.0f, 11.0f }, { ammo_bar, 4.0f }, health_bar_decal, { 0.0f, 0.0f }, { ammo_bar, 4.0f });
+
+		rob8bitFont.Print(this, { 44, 1 }, std::to_string(player_lives), olc::BLACK);
+		rob8bitFont.Print(this, { 43, 0 }, std::to_string(player_lives));
+
+		rob8bitFont.Print(this, { 81, 1 }, std::to_string(player_mags), olc::BLACK);
+		rob8bitFont.Print(this, { 80, 0 }, std::to_string(player_mags));
+
+		rob8bitFont.Print(this, { 108, 8 }, std::to_string(player_keys), olc::BLACK);
+		rob8bitFont.Print(this, { 107, 7 }, std::to_string(player_keys));
+	}
+
+	void DestroyInfoPane() {
+		if (info_pane_decal != nullptr) delete info_pane_decal;
+		if (health_bar_decal != nullptr) delete health_bar_decal;
+		if (char_icon_decal != nullptr) delete char_icon_decal;
+		if (info_pane_sprite != nullptr) delete info_pane_sprite;
+		if (health_bar_sprite != nullptr) delete health_bar_sprite;
+		if (char_icon_sprite != nullptr) delete char_icon_sprite;
+	}
+
+// ========================================================================================================================
+// END     Info Pane
+// ========================================================================================================================
 
 
 	bool OnUserCreate() override
@@ -262,6 +334,7 @@ public:
 		try {
 			InitialisePlayerSprite();
 			InitialiseTerrain();
+			InitialiseInfoPane();
 			rob8bitFont.LoadResources("resources/font/rob8bit");
 		}
 		catch (std::string error) {
@@ -272,6 +345,7 @@ public:
 
 	bool OnUserDestroy() override
 	{
+		DestroyInfoPane();
 		DestroyTerrain();
 		delete player_sprite;
 		return true;
@@ -307,7 +381,7 @@ public:
 		DrawString({ 10,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
 		DrawString({ 10,30 }, "Wld: " + std::to_string(world_size.x) + ", " + std::to_string(world_size.y));
 #endif
-		rob8bitFont.Print(this, { 40, 40 }, "Hello World!  0123456789");
+		DrawInfoPane();
 		return true;
 	}
 

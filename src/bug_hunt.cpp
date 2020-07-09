@@ -52,7 +52,7 @@ class BugHunt : public olc::PixelGameEngine
 	olc::Decal* terrain_blocks_dec;
 
 	// fonts
-	RWFont rob8bitFont;
+	font::Font rob8bitFont;
 
 	olc::vf2d camera_pos = { 0.0f, 0.0f };
 

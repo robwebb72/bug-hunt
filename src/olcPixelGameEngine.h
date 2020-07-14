@@ -762,11 +762,12 @@ namespace olc
 		std::function<olc::Pixel(const int x, const int y, const olc::Pixel&, const olc::Pixel&)> funcPixelMode;
 		std::chrono::time_point<std::chrono::system_clock> m_tp1, m_tp2;
 
-		// State of keyboard		
+		// State of keyboard	
+	public:
 		bool		pKeyNewState[256]{ 0 };
 		bool		pKeyOldState[256]{ 0 };
 		HWButton	pKeyboardState[256]{ 0 };
-
+	private:
 		// State of mouse
 		bool		pMouseNewState[nMouseButtons]{ 0 };
 		bool		pMouseOldState[nMouseButtons]{ 0 };

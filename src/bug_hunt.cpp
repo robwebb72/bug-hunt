@@ -203,21 +203,39 @@ public:
 		return (pos - camera_pos);
 	}
 
+	bool lastFocus = true;
+
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		bool focus = false;
+		if (IsFocused())
+		{
+			// DIRTY HACK to solve the issue of key presses not being registered as released while the window is not in focus
+			// also had to change the access modifiers of the key state arrays to be public
+			if (lastFocus == false) {
+				for (int i = 0; i < 256; i++) {
+					pKeyOldState[i] = { 0 };
+					pKeyNewState[i] = { 0 };
+					pKeyboardState[i] = { 0 };
+				}
+			}
+
+			focus = true;
+			controller.Update(fElapsedTime);
+			HandleUserInput(fElapsedTime);
+			UpdateCameraPos();
+			// work out which animation the player sprite should be using and then draw the sprite
+			int player_anim_frame = player_reverse ? 8 - player_direction : player_direction;
+			player_anim_frame += (player_state == PlayerState::firing) ? 18 : 0;
+			player_anim_frame += (player_state == PlayerState::moving) ? 9 : 0;
+
+			player_sprite->Update((player_state == PlayerState::moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
+			player_sprite->UseAnimation(player_anim_frame);
+		}
+		lastFocus = focus;
 		Clear(olc::DARK_GREY);
-		controller.Update(fElapsedTime);
-		HandleUserInput(fElapsedTime);
-		UpdateCameraPos();
 		levelMap.DrawTerain(this,camera_pos);
 
-		// work out which animation the player sprite should be using and then draw the sprite
-		int player_anim_frame = player_reverse ? 8 - player_direction : player_direction;
-		player_anim_frame += (player_state == PlayerState::firing) ? 18 : 0;
-		player_anim_frame += (player_state == PlayerState::moving) ? 9 : 0;
-
-		player_sprite->Update((player_state == PlayerState::moving) & player_reverse ? -fElapsedTime : fElapsedTime); // if player is moving backwards, play walk anim backwards
-		player_sprite->UseAnimation(player_anim_frame);
 		olc::vf2d pos = WorldToScreen(player_pos);
 		player_sprite->Draw(this, WorldToScreen(player_pos));
 

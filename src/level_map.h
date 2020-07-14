@@ -1,3 +1,5 @@
+#ifndef __R72_OLC_LEVEL_MAP__
+#define __R72_OLC_LEVEL_MAP__
 
 #include "olcPixelGameEngine.h"
 
@@ -40,6 +42,8 @@ public:
 	void LoadResources(std::string resourcename);
 	void Destroy();
 
-	void DrawTerain(olc::PixelGameEngine *engine, olc::vf2d camera_pos);
+	void DrawTerain(olc::PixelGameEngine* engine, olc::vf2d camera_pos);
 	olc::vf2d CollisionWithTerrain(const olc::vf2d& position, const olc::vf2d& delta, const olc::vi2d& bb_tl, const olc::vi2d& bb_br);
-}
+};
+
+#endif

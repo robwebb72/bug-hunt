@@ -38,5 +38,8 @@
     <ClInclude Include="src\font_sheet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\level_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

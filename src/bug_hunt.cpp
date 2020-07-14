@@ -3,10 +3,11 @@
 #include "Zix_PGE_Controller.h"
 #include "anim_sprite.cpp"
 #include "font_sheet.h"
+#include "level_map.h"
 
-#include "level_map.cpp"
+#define SHOW_DEBUG_INFO
 
-//#define SHOW_DEBUG_INFO
+
 olc::vi2d screen_size = { 640, 400 };
 
 
@@ -35,10 +36,16 @@ class BugHunt : public olc::PixelGameEngine
 	// player location & direction
 	enum class PlayerState { idling=0, moving=1, firing=2} player_state = PlayerState::idling;
 	const int player_direction_none = 4;
-	olc::vf2d player_pos = { 384.0f, 160.0f};
 	float player_speed = 180.0f;
 	int player_direction = 7;
 	bool player_reverse = false;
+
+
+
+
+
+
+
 
 	// player sprite
 	AnimatedSprite* player_sprite;
@@ -48,6 +55,11 @@ class BugHunt : public olc::PixelGameEngine
 	float player_moving_anim_speed = 0.10f;
 	float player_firing_anim_speed = 0.08f;
 	
+
+	olc::vf2d player_pos { 432.0f, 272.0f};
+	olc::vi2d player_bb_terrain_top_left{ 1 ,1 };
+	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1 -1, player_sprite_size.y - 1 -1 };
+
 	// terrain
 	LevelMap levelMap;
 
@@ -182,6 +194,7 @@ public:
 		try {
 			InitialisePlayerSprite();
 			levelMap.Initialise();
+			levelMap.LoadResources("resources/levels/level-00");
 			InitialiseInfoPane();
 			rob8bitFont.LoadResources("resources/font/rob8bit");
 		}
@@ -244,9 +257,8 @@ public:
 		DrawLine({ ScreenWidth() / 2, 0 }, { ScreenWidth() / 2, ScreenHeight() });
 		DrawRect(WorldToScreen(player_pos), { player_sprite_size.x -1, player_sprite_size.y - 1 }, olc::RED);
 		DrawString(WorldToScreen(player_pos), std::to_string(player_direction));
-		DrawString({ 10,10 }, "Ply: " + std::to_string(player_pos.x) + ", " + std::to_string(player_pos.y));
-		DrawString({ 10,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
-		DrawString({ 10,30 }, "Wld: " + std::to_string(world_size.x) + ", " + std::to_string(world_size.y));
+		DrawString({ 200,10 }, "Ply: " + std::to_string(player_pos.x) + ", " + std::to_string(player_pos.y));
+		DrawString({ 200,20 }, "Cam: " + std::to_string(camera_pos.x) + ", " + std::to_string(camera_pos.y));
 #endif
 		DrawInfoPane();
 		return true;
@@ -258,8 +270,6 @@ public:
 		camera_pos.y = BindToRange(camera_pos.y, 0.0f, (float) levelMap.world_size.y - ScreenHeight());
 	}
 
-	olc::vi2d player_bb_terrain_top_left{ 0, 0};
-	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1, player_sprite_size.y - 1 };
 
 	void HandleUserInput(float elapsedTime) {
 
@@ -281,7 +291,6 @@ public:
 		if (GetKey(olc::NP3).bHeld) {
 			y_direction = 1; x_direction = 1;
 		}
-
 
 		if (GetKey(key_up).bHeld  || y_delta>0) y_direction = -1;		
 		if (GetKey(key_down).bHeld || y_delta<0) y_direction = 1;

@@ -142,6 +142,7 @@
     <ClCompile Include="src\anim_sprite.cpp" />
     <ClCompile Include="src\bug_hunt.cpp" />
     <ClCompile Include="src\font_sheet.cpp" />
+    <ClCompile Include="src\level_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\font_sheet.h" />

@@ -61,7 +61,7 @@ class BugHunt : public olc::PixelGameEngine
 	olc::vi2d player_bb_terrain_btm_right{ player_sprite_size.x - 1 -1, player_sprite_size.y - 1 -1 };
 
 	// terrain
-	LevelMap levelMap;
+	map::LevelMap levelMap;
 
 	// fonts
 	font::Font rob8bitFont;
@@ -199,6 +199,7 @@ public:
 			rob8bitFont.LoadResources("resources/font/rob8bit");
 		}
 		catch (std::string error) {
+			std::cerr << error << std::endl;
 			return false;
 		}
 		return true;
@@ -220,6 +221,7 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		Clear(olc::DARK_GREY);
 		bool focus = false;
 		if (IsFocused())
 		{
@@ -246,7 +248,6 @@ public:
 			player_sprite->UseAnimation(player_anim_frame);
 		}
 		lastFocus = focus;
-		Clear(olc::DARK_GREY);
 		levelMap.DrawTerain(this,camera_pos);
 
 		olc::vf2d pos = WorldToScreen(player_pos);

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.2" tiledversion="1.3.5" name="bug_hunt_blocks" tilewidth="16" tileheight="16" tilecount="320" columns="20">
+<tileset version="1.4" tiledversion="1.4.1" name="bug_hunt_blocks" tilewidth="16" tileheight="16" tilecount="320" columns="20">
  <image source="level-00-tiles.png" width="320" height="256"/>
  <tile id="0" type="floor"/>
  <tile id="1" type="floor"/>
@@ -27,6 +27,7 @@
  <tile id="40" type="floor"/>
  <tile id="41" type="floor"/>
  <tile id="42" type="floor"/>
+ <tile id="43" type="floor"/>
  <tile id="80" type="door">
   <animation>
    <frame tileid="82" duration="100"/>

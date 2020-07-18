@@ -2,62 +2,154 @@
 #include "level_map.h"
 #include <iostream>
 #include <fstream>
+#include <map>
 
 
-
-class TileSheet {
-
-};
+namespace map {
 
 
-void LevelMap::LoadTileSheet(std::string filename) {
-	tile_sheet_columns = 20;
-	tile_size = { 16, 16 };
-	tile_sheet_sprite = nullptr;
-	tile_sheet_decal = nullptr;
-	tile_sheet_sprite = new olc::Sprite(filename);
-	tile_sheet_decal = new olc::Decal(tile_sheet_sprite);
-}
-
-
-void LevelMap::DestroyTileSheet() {
-	if(tile_sheet_decal!= nullptr) {
-		delete tile_sheet_decal;
-		tile_sheet_decal = nullptr;
-	}
-	if(tile_sheet_sprite!= nullptr) {
-		delete tile_sheet_sprite;
-		tile_sheet_sprite = nullptr;
-	}
-}
-
-
-int LevelMap::GetFieldValue(std::string line, std::string field_name) {
+int GetFieldValue(std::string line, std::string field_name) {
 	std::size_t pos = 0;
 	pos = line.find(field_name);
-	if (pos == std::string::npos) throw "TMX file: error reading field (" + field_name + ")";
+	if (pos == std::string::npos) throw "TSX file: error reading field (" + field_name + ")";
 	pos += field_name.size();
 	return stoi(line.substr(pos));
 }
 
 
-std::string LevelMap::GetFieldString(std::string line, std::string field_name) {
+std::string GetFieldString(std::string line, std::string field_name) {
 	std::size_t pos1 = 0;
 	std::size_t pos2 = 0;
 	pos1 = line.find(field_name);
-	if (pos1 == std::string::npos) throw "TMX file: error reading field (" + field_name + ")";
+	if (pos1 == std::string::npos) throw "TSX file: error reading field (" + field_name + ")";
 	pos1 += field_name.size();
-	pos2 = line.find("\"", pos1)-pos1;
+	pos2 = line.find("\"", pos1) - pos1;
 	return (line.substr(pos1, pos2));
 }
 
+
+constexpr int FLOOR = 0;
+constexpr int BLOCK_PLAYER = 1;
+constexpr int BLOCK_CRITTER = 2;
+constexpr int BLOCK_PLAYER_BULLET = 4;
+constexpr int BLOCK_CRITTER_BULLET = 8;
+constexpr int WALL = 15;
+
+
+class Tile {
+
+public:
+
+	TileSheet* tile_sheet;
+	int x=0;
+	int y=0;
+	int type=0;
+
+	Tile(TileSheet *tile_sheet, std::string types, int _x, int _y) {
+		this->tile_sheet = tile_sheet;
+
+		type |= (types.find("block_player") != std::string::npos) ? BLOCK_PLAYER : 0;
+		type |= (types.find("block_player_bullet") != std::string::npos) ? BLOCK_PLAYER_BULLET : 0;
+		type |= (types.find("block_alien") != std::string::npos) ? BLOCK_CRITTER : 0;
+		type |= (types.find("block_alien_bullet") != std::string::npos) ? BLOCK_CRITTER_BULLET : 0;
+		type |= (types.find("wall") != std::string::npos) ? WALL : 0;
+		x = _x;
+		y = _y;
+	}
+};
+
+
+class MapBlock {
+public:
+	Tile* pTile;
+
+};
+
+
+class TileSheet {
+
+public:
+	olc::Sprite* sheet_sprite = nullptr;
+	olc::Decal* sheet_decal = nullptr;
+	int tile_sheet_columns= 0;
+	std::map<int, Tile*> tiles;
+
+	void Load(std::string filename);
+	void Destroy();
+
+};
+
+
+void TileSheet::Load(std::string resourcename) {
+	sheet_sprite = nullptr;
+	sheet_decal = nullptr;
+
+	// TODO: [RW:2020-07-10] Load the tile set information here from the .TSX file
+	std::ifstream tsx_file(resourcename + ".tsx");
+	if (!tsx_file) throw "Error opening level map file: " + resourcename + ".tsx";
+
+
+
+	tile_sheet_columns = 0;
+
+	std::string current_line;
+	int line_number = 0;
+
+	while (std::getline(tsx_file, current_line)) {
+		if (current_line.find("<tileset") != std::string::npos) {
+			tile_sheet_columns = map::GetFieldValue(current_line, "columns=\"");
+			continue;
+		}
+		if (current_line.find("<image") != std::string::npos) {
+			std::string image_filename = map::GetFieldString(current_line, "source=\"");
+			sheet_sprite = new olc::Sprite("resources\\levels\\" + image_filename);
+			if (sheet_sprite->width == 0 || sheet_sprite->height == 0) throw "Error loading tile image: resources\\levels\\" + image_filename;
+			sheet_decal = new olc::Decal(sheet_sprite);
+			continue;
+		}
+		if (current_line.find("<tile") != std::string::npos) {
+			if (tile_sheet_columns == 0) throw "Error reading file: " + resourcename + ".tsx (columns is zero)";
+			// TODO: [RW:2020-07-16]  Process tile information
+			int tile_id = map::GetFieldValue(current_line, "id=\"");
+			std::string tile_type = map::GetFieldString(current_line, "type=\"");
+			tiles[tile_id] = new Tile(this, tile_type, tile_id % tile_sheet_columns, (int)tile_id / tile_sheet_columns);
+			continue;
+		}
+
+	}
+	if (tile_sheet_columns == 0) throw "Error reading file: " + resourcename + ".tsx (columns is zero)";
+	if (sheet_sprite==nullptr) throw "Error reading file: " + resourcename + ".tsx (image file not loaded)";
+
+}
+
+
+void TileSheet::Destroy() {
+	for (auto item: tiles) {
+		delete item.second;
+	}
+	tiles.clear();
+
+	if (sheet_decal != nullptr) {
+		delete sheet_decal;
+		sheet_decal = nullptr;
+	}
+	if (sheet_sprite != nullptr) {
+		delete sheet_sprite;
+		sheet_sprite = nullptr;
+	}
+}
+
+
+
+void LevelMap::DestroyTileSheet() {
+	tile_sheet->Destroy();
+}
 
 
 void LevelMap::LoadMap(std::string resourcename) {
 
 	map_size = { 0,0 };
 	map = nullptr;
-	LoadTileSheet(resourcename + "-tiles.png");
 
 	std::ifstream tmx_file(resourcename+".tmx");
 	if (!tmx_file) throw "Error opening level map file: " + resourcename+ ".tmx";
@@ -67,20 +159,22 @@ void LevelMap::LoadMap(std::string resourcename) {
 
 	while (std::getline(tmx_file, current_line)) {
 		if(current_line.find("<map") != std::string::npos) {
-			map_size.x = GetFieldValue(current_line, "width=\"");
-			map_size.y = GetFieldValue(current_line, "height=\"");
+			map_size.x = map::GetFieldValue(current_line, "width=\"");
+			map_size.y = map::GetFieldValue(current_line, "height=\"");
+			tile_size.x = map::GetFieldValue(current_line, "tilewidth=\"");
+			tile_size.y = map::GetFieldValue(current_line, "tileheight=\"");
 			continue;
 		}
 		if (current_line.find("<tileset") != std::string::npos) {
-			std::string filename = GetFieldString(current_line, "source=\"");
-			// TODO: [RW:2020-07-10] Load the tile set information here
+			std::string filename = map::GetFieldString(current_line, "source=\"");
+			tile_sheet->Load(resourcename);
 			continue;
 		}
 		if(current_line.find("<data") != std::string::npos) {
 			if (map_size.x < 1) throw "Error map width cannot be less than 1";
 			if (map_size.y < 1) throw "Error map height cannot be less than 1";
 
-			map = new int[(int)map_size.x * map_size.y];
+			map = new MapBlock[map_size.x * map_size.y];
 			int tile_counter = 0;
 			while (std::getline(tmx_file, current_line)) {
 
@@ -90,7 +184,11 @@ void LevelMap::LoadMap(std::string resourcename) {
 				int val;
 				while (stream >> val) {
 					if (tile_counter >= map_size.x * map_size.y) throw "Error reading map data - too many values";
-					map[tile_counter++] = val-1;
+
+					auto it = tile_sheet->tiles.find(val - 1);
+					if (it == tile_sheet->tiles.end()) throw "Error reading map - can't find tile value " + val;
+
+					map[tile_counter++].pTile = it->second;
 					if (stream.peek() == ',') stream.ignore();
 				}
 			}
@@ -101,6 +199,7 @@ void LevelMap::LoadMap(std::string resourcename) {
 
 
 void LevelMap::Initialise() {
+	tile_sheet = new TileSheet();
 }
 
 
@@ -115,6 +214,8 @@ void LevelMap::Destroy() {
 	DestroyTileSheet();
 	delete [] map;
 	map = nullptr;
+	delete tile_sheet;
+	tile_sheet = nullptr;
 }
 
 
@@ -157,21 +258,31 @@ void LevelMap::DrawTerain(olc::PixelGameEngine *engine, olc::vf2d camera_pos) {
 	for (int j = 0; j < map_screen_height; j++) {
 		int i_pos = map_start_x_block;
 		for (int i = 0; i < map_screen_width; i++) {
-			int map_value = map[j_pos * map_size.x + i_pos];
-			int block_x = tile_size.x * (map_value % tile_sheet_columns);
-			int block_y = tile_size.y * (map_value / tile_sheet_columns);
+			int offset = j_pos * map_size.x + i_pos;
+			MapBlock* mb = &map[offset];
+			Tile* tile2 = mb->pTile;
+			Tile * tile = map[j_pos * map_size.x + i_pos].pTile;
+//			int map_value = map[j_pos * map_size.x + i_pos];
+
+			// TODO: [R:2020.07.11] This will need rewriting to take the new Tile class into account
+			//int block_x = tile_size.x * (map_value % tile_sheet->tile_sheet_columns);
+			//int block_y = tile_size.y * (map_value / tile_sheet->tile_sheet_columns);
+			int block_x = tile_size.x * tile->x;
+			int block_y = tile_size.y * tile->y;
+
 			olc::vi2d screen_pos = { i * tile_size.x - x_offset_to_screen, (int)j * tile_size.y - y_offset_to_screen };
 
-
+			int screen_pos_x = i * tile_size.x - x_offset_to_screen;
+			int screen_pos_y = j * tile_size.y - y_offset_to_screen;
 #ifdef SPRITE_TERRAIN
 			engine->DrawPartialSprite(
-				{ i * tile_size.x - x_offset_to_screen, (int) j * tile_size.y - y_offset_to_screen },
-					tile_sheet_sprite, 
+				{ (int) i * tile_size.x - x_offset_to_screen, (int) j * tile_size.y - y_offset_to_screen },
+					tile->tile_sheet->sheet_sprite, 
 					{ block_x, block_y }, 
 					tile_size);
 #else
 			engine->DrawPartialDecal({ (float) (i * tile_size.x - x_offset_to_screen), (float) (j * tile_size.y - y_offset_to_screen) },
-				tile_sheet_decal,
+				tile_sheet->sheet_decal,
 				{ (float) block_x, (float) block_y },
 				tile_size);
 #endif
@@ -182,13 +293,10 @@ void LevelMap::DrawTerain(olc::PixelGameEngine *engine, olc::vf2d camera_pos) {
 }
 
 
-
-
 bool LevelMap::IsMapPassable(int x, int y) {
 	if (x < 0 || x >= map_size.x) return false;
 	if (y < 0 || y >= map_size.y) return false;
-	int map_value = map[(y * map_size.x) + x];
-	return (map_value < 20 || map_value>= 40);
+	return (map[(y * map_size.x) + x].pTile->type & BLOCK_PLAYER) == 0;
 }
 
 
@@ -257,4 +365,6 @@ olc::vf2d LevelMap::CollisionWithTerrain(const olc::vf2d& position, const olc::v
 		}
 	}
 	return { dx_new, dy_new };
+}
+
 }

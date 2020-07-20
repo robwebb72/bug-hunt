@@ -5,7 +5,7 @@
 #include <map>
 
 // SPRITE_TERRAIN is used to either draw the terrain using olc::Sprites or olc::Decals - decals are much faster but can cover over debugging info depending on how you display it
-//#define SPRITE_TERRAIN
+#define SPRITE_TERRAIN
 
 namespace map {
 

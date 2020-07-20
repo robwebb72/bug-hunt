@@ -329,7 +329,6 @@ public:
 			player_pos.x = BindToRange(player_pos.x, 0.0f, levelMap.world_size.x - (float)player_sprite_size.x);
 			player_pos.y = BindToRange(player_pos.y, 0.0f, levelMap.world_size.y - (float)player_sprite_size.y);
 
-
 		}
 
 	}
